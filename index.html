@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora Preço Médio</title>
+  <style>
+    body {
+      font-family: Calibri, sans-serif;
+      background-color: #006400;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin: 10px 0;
+    }
+    .logo {
+      max-width: 120px;
+      margin-bottom: 10px;
+    }
+    .container {
+      background: white;
+      color: black;
+      padding: 20px;
+      border-radius: 20px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    select, input {
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 8px;
+      margin: 8px auto;
+      width: 60%;
+      display: block;
+      max-width: 160px;
+    }
+    label {
+      font-weight: bold;
+    }
+    .resultado {
+      margin-top: 20px;
+      background-color: #006400;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .bonificacao {
+      display: none;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <img src="logo.png" alt="Logo" class="logo">
+  <h1>Calculadora de Preço Médio</h1>
+  <div class="container">
+    <div id="produtos"></div>
+
+    <hr>
+    <label>Vai bonificar?</label>
+    <input type="checkbox" id="bonificar" onchange="toggleBonificacao()"> Sim
+
+    <div class="bonificacao" id="bonificacaoDiv">
+      <label for="familiaBonificada">Família bonificada:</label>
+      <select id="familiaBonificada"></select>
+      <input type="number" id="quantidadeBonificada" placeholder="Quantidade bonificada">
+    </div>
+
+    <div class="resultado" id="resultado"></div>
+  </div>
+
+  <script>
+    const precos = {
+      'Refresco Caixa 36': [[5, 32.60], [25, 31.60], [50, 30.80], [167, 29.85], [Infinity, 28.75]],
+      'Refresco Caixa 24': [[5, 22.45], [25, 21.80], [50, 21.30], [167, 20.65], [Infinity, 19.85]],
+      'Resfresco Pet': [[5, 11.10], [25, 10.75], [50, 10.55], [167, 10.30], [Infinity, 9.85]],
+      'Água Garrafa': [[5, 9.90], [25, 9.70], [50, 9.50], [167, 9.30], [Infinity, 9.10]],
+      'Refresco 1,5 L': [[10, 22.65], [25, 21.95], [59, 21.40], [Infinity, 19.95]],
+      'Concentrado': [[10, 99.95], [25, 97.15], [59, 94.95], [Infinity, 88.00]],
+      'Concentrado 37%': [[10, 99.95], [25, 97.15], [59, 94.95], [Infinity, 88.00]],
+      'Concentrado Açaí': [[10, 103.30], [25, 101.25], [59, 99.85], [Infinity, 94.35]],
+      'Bombona': [[10, 37.15], [25, 36.10], [59, 35.45], [Infinity, 33.35]],
+      'Bombona Açaí': [[10, 38.75], [25, 37.65], [59, 36.80], [Infinity, 34.80]],
+      'Ginseng': [[10, 21.25], [25, 20.80], [59, 20.35], [Infinity, 19.00]]
+    };
+
+    const produtosDiv = document.getElementById("produtos");
+    const familiaBonificadaSelect = document.getElementById("familiaBonificada");
+
+    function criarCamposProduto(id) {
+      const container = document.createElement("div");
+      container.innerHTML = `
+        <label for="familia${id}">Família ${id}:</label>
+        <select id="familia${id}"></select>
+        <input type="number" id="quantidade${id}" placeholder="Quantidade de caixas">
+      `;
+      produtosDiv.appendChild(container);
+    }
+
+    function preencherSelect(id) {
+      const select = document.getElementById(id);
+      for (const familia in precos) {
+        const opt = document.createElement("option");
+        opt.value = familia;
+        opt.text = familia;
+        select.appendChild(opt);
+      }
+    }
+
+    function toggleBonificacao() {
+      const checked = document.getElementById("bonificar").checked;
+      document.getElementById("bonificacaoDiv").style.display = checked ? 'block' : 'none';
+      calcular();
+    }
+
+    function calcular() {
+      let faturamentoTotal = 0;
+      let volumeTotal = 0;
+
+      for (let i = 1; i <= 3; i++) {
+        const familia = document.getElementById("familia" + i).value;
+        const quantidade = parseInt(document.getElementById("quantidade" + i).value) || 0;
+
+        const tabela = precos[familia];
+        for (let j = 0; j < tabela.length; j++) {
+          const [limite, preco] = tabela[j];
+          if (quantidade <= limite) {
+            faturamentoTotal += preco * quantidade;
+            volumeTotal += quantidade;
+            break;
+          }
+        }
+      }
+
+      let boniQtd = 0;
+      let boniValor = 0;
+      if (document.getElementById("bonificar").checked) {
+        const familiaBoni = document.getElementById("familiaBonificada").value;
+        const qtdBoni = parseInt(document.getElementById("quantidadeBonificada").value) || 0;
+        const tabela = precos[familiaBoni];
+        for (let j = 0; j < tabela.length; j++) {
+          const [limite, preco] = tabela[j];
+          if (qtdBoni <= limite) {
+            boniValor = preco * qtdBoni;
+            boniQtd = qtdBoni;
+            break;
+          }
+        }
+      }
+
+      const precoMedio = (faturamentoTotal - boniValor) / volumeTotal;
+      const resultado = document.getElementById("resultado");
+      resultado.innerHTML = `Faturamento: R$ ${faturamentoTotal.toFixed(2)}<br>Preço Médio: R$ ${precoMedio.toFixed(2)}`;
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      criarCamposProduto(i);
+      preencherSelect("familia" + i);
+      document.getElementById("familia" + i).addEventListener("change", calcular);
+      document.getElementById("quantidade" + i).addEventListener("input", calcular);
+    }
+
+    preencherSelect("familiaBonificada");
+    document.getElementById("familiaBonificada").addEventListener("change", calcular);
+    document.getElementById("quantidadeBonificada").addEventListener("input", calcular);
+  </script>
+</body>
+</html>
