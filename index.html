@@ -112,9 +112,27 @@
       }
     }
 
+    function preencherSelectBonificada() {
+      const familiasBonificadas = ['Refresco 1,5 L', 'Resfresco Pet', 'Ginseng'];
+      const select = document.getElementById("familiaBonificada");
+      select.innerHTML = ""; // limpa antes de preencher
+
+      familiasBonificadas.forEach(familia => {
+        const opt = document.createElement("option");
+        opt.value = familia;
+        opt.text = familia;
+        select.appendChild(opt);
+      });
+    }
+
     function toggleBonificacao() {
       const checked = document.getElementById("bonificar").checked;
-      document.getElementById("bonificacaoDiv").style.display = checked ? 'block' : 'none';
+      const boniDiv = document.getElementById("bonificacaoDiv");
+      boniDiv.style.display = checked ? 'block' : 'none';
+
+      if (checked) {
+        preencherSelectBonificada();
+      }
       calcular();
     }
 
@@ -153,11 +171,13 @@
         }
       }
 
-      const precoMedio = (faturamentoTotal - boniValor) / volumeTotal;
+      // Evita divisão por zero
+      const precoMedio = volumeTotal > 0 ? (faturamentoTotal - boniValor) / volumeTotal : 0;
       const resultado = document.getElementById("resultado");
       resultado.innerHTML = `Faturamento: R$ ${faturamentoTotal.toFixed(2)}<br>Preço Médio: R$ ${precoMedio.toFixed(2)}`;
     }
 
+    // Inicializa campos dos produtos
     for (let i = 1; i <= 3; i++) {
       criarCamposProduto(i);
       preencherSelect("familia" + i);
@@ -165,9 +185,10 @@
       document.getElementById("quantidade" + i).addEventListener("input", calcular);
     }
 
-    preencherSelect("familiaBonificada");
+    // Não preenche o select bonificado inicialmente, só quando ativar o checkbox
     document.getElementById("familiaBonificada").addEventListener("change", calcular);
     document.getElementById("quantidadeBonificada").addEventListener("input", calcular);
+
   </script>
 </body>
 </html>
